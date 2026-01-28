@@ -1,8 +1,5 @@
-using FiinGroup.CMP.API.BLImplementations;
-using FiinGroup.CMP.API.BLInterfaces;
 using FiinGroup.Packages.CacheManager;
 using StoxPlus.Infrastructure.Behaviors;
-
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 // Add services to the container.

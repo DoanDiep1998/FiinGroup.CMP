@@ -1,8 +1,13 @@
+using FiinGroup.CMP.PM.BLImplementations;
+using FiinGroup.CMP.PM.BLInterfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+var service = builder.Services;
 
+service.AddScoped<ICMPService, CMPService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

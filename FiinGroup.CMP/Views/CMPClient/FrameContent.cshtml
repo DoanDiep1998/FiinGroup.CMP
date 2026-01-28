@@ -1,0 +1,226 @@
+﻿@using FiinGroup.CMP.PM.Models
+@model List<PolicyCategoryModel>
+@{
+    Layout = "~/Views/Shared/_CMPClientLayout.cshtml";
+    ViewBag.Title = "Tùy chỉnh Consent";
+}
+<style>
+    .consent-container {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont;
+    }
+
+    .consent-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .consent-title {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .consent-body {
+        padding: 20px;
+    }
+
+    .consent-category {
+        margin-bottom: 24px;
+    }
+
+    .category-title {
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+
+    .consent-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .consent-text {
+        max-width: 85%;
+    }
+
+    .consent-footer {
+        padding: 16px 20px;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+</style>
+
+<div class="consent-container">
+
+    <!-- Header -->
+    <div class="consent-header">
+        <h3 class="consent-title">Tùy chỉnh Consent</h3>
+    </div>
+
+    <!-- Body -->
+    <div class="consent-body">
+        <div class="consent-body" id="consentBody"></div>
+        @*@foreach (var category in Model)
+        {
+            <div class="consent-category">
+                <h5 class="category-title">
+                    @category.PolicyCategory.CategoryName
+                </h5>
+            
+
+                @foreach (var policy in category.policyModels)
+                {
+                    var disabled = policy.IsRequired ? "disabled" : "";
+                    var checkedAttr = policy.IsRequired ? "checked" : "";
+
+                    <div class="consent-row">
+                        <div class="consent-text">
+                            @Html.Raw(policy.Content)
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input consent-item"
+                                   type="checkbox"
+                                   data-policy="@policy.PolicyCode"
+                                   data-version="@policy.PolicyVersion"
+                                   @checkedAttr
+                                   @disabled />
+                        </div>
+                    </div>
+                }
+            </div>
+        } *@
+
+    </div>
+
+    <!-- Footer -->
+    <div class="consent-footer">
+        <div>
+            <button class="btn btn-outline-secondary" type="button" onclick="rejectAll()">Từ chối tất cả</button>
+            <button class="btn btn-outline-primary" type="button" onclick="acceptAll()">Chấp nhận tất cả</button>
+        </div>
+
+        <button class="btn btn-primary" type="button" onclick="submitConsent()">Gửi</button>
+    </div>
+
+</div>
+@section Scripts {
+<script>
+
+    function acceptAll() {
+        document.querySelectorAll('.consent-item:not(:disabled)')
+            .forEach(x => x.checked = true);
+    }
+
+    function rejectAll() {
+        document.querySelectorAll('.consent-item:not(:disabled)')
+            .forEach(x => x.checked = false);
+    }
+
+    function submitConsent() {
+    const parentOrigin = new URLSearchParams(window.location.search)
+      .get('parentOrigin');
+        // Gửi lên parent
+        window.parent.postMessage(
+            {
+                type: 'CMP_CONSENT_SUBMIT',
+            },
+            parentOrigin
+        );
+    }
+    window.addEventListener('message', (event) => {
+                   const consents = [];
+             document.querySelectorAll('.consent-item').forEach(el => {
+                consents.push({
+                    policyCode: el.dataset.policy,
+                    version: el.dataset.version,
+                    accepted: el.checked
+                });
+            });
+                saveConsentToCMP(consents,event.data.payload);
+    });
+
+        $(document).ready(function () {
+        loadPolicies();
+    });
+
+    function loadPolicies() {
+        const lang = new URLSearchParams(window.location.search).get('lang') || 'vi';
+        const productCode = '@ViewData["ProductCode"]';
+        $.ajax({
+            url: '/CMPClient/GetPolicyContent',
+            type: 'GET',
+            headers: {
+                    'language': lang
+            },
+             data: {productCode: productCode},
+            success: function (data) {
+                renderPolicies(data);
+            },
+            error: function () {
+                alert('Không tải được policy');
+            }
+        });
+    }
+
+    function renderPolicies(categories) {
+        const $container = $('#consentBody');
+        $container.empty();
+
+        $.each(categories, function (_, category) {
+            const $category = $('<div>', { class: 'consent-category' });
+
+            $category.append(`
+                <h5 class="category-title">
+                    ${category.policyCategory.categoryName}
+                </h5>
+            `);
+
+            $.each(category.policyModels, function (_, policy) {
+                const checked = policy.isRequired ? 'checked' : '';
+                const disabled = policy.isRequired ? 'disabled' : '';
+
+                $category.append(`
+                    <div class="consent-row">
+                        <div class="consent-text">
+                            ${policy.content}
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input consent-item"
+                                   type="checkbox"
+                                   data-policy="${policy.policyCode}"
+                                   data-version="${policy.version}"
+                                   ${checked}
+                                   ${disabled} />
+                        </div>
+                    </div>
+                `);
+            });
+
+            $container.append($category);
+        });
+    }
+
+    function saveConsentToCMP(consents,userInfo) {
+        debugger;
+        const productCode = '@ViewData["ProductCode"]';
+        $.ajax({
+            url: '/CMPClient/SaveConsent',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                productCode: productCode,
+                consents: consents,
+                    userInfo:JSON.stringify(userInfo)
+            }),
+            success: function () {
+                alert('Consent saved');
+            }
+        });
+    }
+</script>
+}

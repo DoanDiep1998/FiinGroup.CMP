@@ -11,7 +11,7 @@ namespace StoxPlus.Infrastructure.DbConsumer
         public CMPDbConsumer(IConfiguration config)
         {
             _config = config;
-            _CMPConn = new ConnectionWrapper(config["AppSettings:ConnectionStrings:CMP"]);
+            _CMPConn = new ConnectionWrapper(config["AppSettings:ConnectionStrings:FiinCMP"]);
 
         }
     }
