@@ -1,0 +1,46 @@
+﻿.consent-container {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+.consent-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.consent-title {
+    margin: 0;
+    font-weight: 600;
+}
+
+.consent-body {
+    padding: 20px;
+}
+
+.consent-category {
+    margin-bottom: 24px;
+}
+
+.category-title {
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.consent-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.consent-text {
+    max-width: 85%;
+}
+
+.consent-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

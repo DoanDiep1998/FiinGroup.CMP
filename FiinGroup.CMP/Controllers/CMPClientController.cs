@@ -18,10 +18,11 @@ namespace FiinGroup.CMP.Controllers
             return View();
         }
 
-        public async Task<IActionResult> FrameContent(string productCode)
+        public async Task<IActionResult> FrameContent(string productCode, string email)
         {
 
             ViewData["ProductCode"] = productCode ?? string.Empty;
+            ViewData["Email"] = email ?? string.Empty;
             return View();
         }
         public async Task<IActionResult> GetPolicyContent(string productCode)
@@ -78,9 +79,10 @@ namespace FiinGroup.CMP.Controllers
             {
                 IdentityKey = Guid.NewGuid().ToString("N"),
                 ProductCode = request.ProductCode,
+                Email = request.Email,
                 CreateBy = userIdHash,
                 UserInfo = request.UserInfo,
-                UserInfoClient = JsonSerializer.Serialize(new
+                ClientInfo = JsonSerializer.Serialize(new
                 {
                     UserIdHash = userIdHash,
                     DeviceId = deviceId,

@@ -9,8 +9,8 @@ namespace FiinGroup.CMP.PM.Models
         public string PolicyCode { get; set; }
         public int PolicyVersion { get; set; }
         [MultiLanguage]
-        public string Content { get; set; }
-        public string EnContent { get; set; }
+        public string Content { get; set; } = default!;
+        public string en_Content { get; set; } = default!;
 
     }
     public class ConsentPolicyViewModel
@@ -20,8 +20,8 @@ namespace FiinGroup.CMP.PM.Models
         public bool IsRequired { get; set; }
         public int PolicyVersion { get; set; }
         [MultiLanguage]
-        public string Content { get; set; }
-        public string en_Content { get; set; }
+        public string Content { get; set; } = default!;
+        public string en_Content { get; set; } = default!;
 
     }
 }

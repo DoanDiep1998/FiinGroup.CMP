@@ -3,6 +3,7 @@
     public class SaveConsentRequest
     {
         public string ProductCode { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
         public string? UserIdHash { get; set; }   // nếu đã login
         public string? UserInfo { get; set; }
         public string? DeviceId { get; set; }     // anonymous

@@ -117,8 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="acceptAll" xml:space="preserve">
+    <value>Accept All</value>
+  </data>
   <data name="privacy_about" xml:space="preserve">
     <value>Your privacy is important to us, and we want you to feel confident about how we handle your information. FiinGroup uses your details to share updates, exclusive offers, and content we believe is relevant to you. Rest assured, we are committed to implementing the necessary technical and managerial measures to protect your personal data in accordance with the Law on Personal Data Protection, its implementing guidelines, and relevant Vietnamese laws and regulations, while ensuring the principle of information security as stipulated by Vietnamese law and FiinGroup's policies, which are publicly posted on our website. </value>
     <comment>ưw</comment>
+  </data>
+  <data name="rejectAll" xml:space="preserve">
+    <value>Reject All</value>
+  </data>
+  <data name="submit" xml:space="preserve">
+    <value>Submit</value>
   </data>
 </root>

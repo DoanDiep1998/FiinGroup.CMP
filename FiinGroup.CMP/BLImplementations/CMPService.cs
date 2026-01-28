@@ -36,9 +36,10 @@ namespace FiinGroup.CMP.PM.BLImplementations
 
                 var parameters = new DynamicParameters();
                 parameters.Add("@IdentityKey", request.IdentityKey);
-                parameters.Add("@UserInfor", request.UserInfo);
-                parameters.Add("@UserInfoClient", request.UserInfoClient);
+                parameters.Add("@UserInfo", request.UserInfo);
+                parameters.Add("@ClientInfo", request.ClientInfo);
                 parameters.Add("@ProductCode", request.ProductCode);
+                parameters.Add("@Email", request.Email);
                 parameters.Add("@CreateBy", request.CreateBy);
                 parameters.Add("@Policies", policyTable.AsTableValuedParameter("dbo.PolicyConsentType"));
 

@@ -117,8 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="acceptAll" xml:space="preserve">
+    <value>Chấp nhận tất cả</value>
+  </data>
   <data name="privacy_about" xml:space="preserve">
     <value>Quyền riêng tư của quý khách rất quan trọng đối với chúng tôi, và chúng tôi muốn quý khách cảm thấy yên tâm về cách chúng tôi xử lý thông tin của quý khách. FiinGroup sử dụng thông tin của quý khách để chia sẻ các bản cập nhật, ưu đãi độc quyền và nội dung mà chúng tôi tin rằng sẽ phù hợp với quý khách. FiinGroup cam kết áp dụng các biện pháp kỹ thuật và biện pháp quản lý cần thiết để bảo vệ dữ liệu cá nhân của quý khách theo đúng quy định của Luật Bảo vệ dữ liệu cá nhân, các văn bản hướng dẫn thi hành và các quy định pháp luật có liên quan của Việt Nam, đồng thời bảo đảm nguyên tắc bảo mật thông tin theo quy định của pháp luật Việt Nam và chính sách của FiinGroup được đăng tải công khai trên trang web của chúng tôi. </value>
     <comment>ưw</comment>
+  </data>
+  <data name="rejectAll" xml:space="preserve">
+    <value>Từ chối tất cả</value>
+  </data>
+  <data name="submit" xml:space="preserve">
+    <value>Gửi</value>
   </data>
 </root>
