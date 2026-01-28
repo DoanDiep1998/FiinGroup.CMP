@@ -2,6 +2,7 @@
 using FiinGroup.CMP.PM.Models;
 using FiinGroup.CMP.PM.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using StoxPlus.Infrastructure.Utils;
 using System.Text.Json;
 
 namespace FiinGroup.CMP.Controllers
@@ -9,9 +10,11 @@ namespace FiinGroup.CMP.Controllers
     public class CMPClientController : Controller
     {
         private readonly ICMPService _cMPService;
-        public CMPClientController(ICMPService cMPService)
+        private readonly IConfiguration _config;
+        public CMPClientController(ICMPService cMPService, IConfiguration config)
         {
             _cMPService = cMPService;
+            _config = config;
         }
         public IActionResult Index(string productCode)
         {
@@ -38,9 +41,6 @@ namespace FiinGroup.CMP.Controllers
             if (string.IsNullOrEmpty(request.ProductCode))
                 return BadRequest("ProductCode is required");
 
-            // 1. Identity
-            string? userIdHash = request.UserIdHash;
-            string? deviceId = request.DeviceId;
 
             // 2. Audit info
             string ip = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',').FirstOrDefault()
@@ -68,11 +68,11 @@ namespace FiinGroup.CMP.Controllers
                 .ToList();
 
             // 4. Location
-            IpLocationResult? location = await _cMPService.GetLocationByIpAsync(ip);
+            //IpLocationResult? location = await _cMPService.GetLocationByIpAsync(ip);
 
-            string country = location?.Country;
-            string region = location?.RegionName;
-            string city = location?.City;
+            //string country = location?.Country;
+            //string region = location?.RegionName;
+            //string city = location?.City;
 
             // 5. Build insert request
             var insertRequest = new SubmitConsentRequest
@@ -80,17 +80,14 @@ namespace FiinGroup.CMP.Controllers
                 IdentityKey = Guid.NewGuid().ToString("N"),
                 ProductCode = request.ProductCode,
                 Email = request.Email,
-                CreateBy = userIdHash,
                 UserInfo = request.UserInfo,
                 ClientInfo = JsonSerializer.Serialize(new
                 {
-                    UserIdHash = userIdHash,
-                    DeviceId = deviceId,
                     Ip = ip,
                     UserAgent = userAgent,
-                    Country = country,
-                    Region = region,
-                    City = city,
+                    //Country = country,
+                    //Region = region,
+                    //City = city,
                     ConsentTime = consentTime
                 }),
                 Policies = acceptedConsents
@@ -104,6 +101,42 @@ namespace FiinGroup.CMP.Controllers
                 timestamp = consentTime
             });
         }
+        [HttpPost]
+        public async Task<IActionResult> InsertDataLink([FromBody] List<DataLinkViewModel> request)
+        {
+            List<DataLinkModel> dataLinkModels = new List<DataLinkModel>();
+            foreach (var item in request)
+            {
+                if (string.IsNullOrWhiteSpace(item.Email))
+                    continue;
+                string serverSecret = _config["CMP:ServerSecret"]!;
+                string encryptUserInfo;
+                try
+                {
+                    encryptUserInfo = EncryptDecryptUserInfoUtils.EncryptUserInfo(
+                        item.UserInfo,
+                        item.Email,
+                        serverSecret);
+                }
+                catch
+                {
+                    return BadRequest("Decrypt failed");
+                }
+                DataLinkModel dataLinkModel = new DataLinkModel
+                {
+                    ProductCode = item.ProductCode,
+                    UserInfo = item.UserInfo,
+                    Email = item.Email,
+                    EncryptData = encryptUserInfo
+                };
+            }
 
+            var rs = await _cMPService.InsertDataLink(dataLinkModels);
+            if (!rs)
+            {
+                return BadRequest("Insert failed");
+            }
+            return Ok(new { success = true });
+        }
     }
 }

@@ -2,7 +2,6 @@
 using FiinGroup.CMP.PM.BLInterfaces;
 using FiinGroup.CMP.PM.Models;
 using FiinGroup.CMP.PM.Models.ViewModels;
-using FiinGroup.Packages.Common.MultiLanguage;
 using StoxPlus.Infrastructure.DbConsumer;
 using System.Data;
 using System.Text.Json;
@@ -197,23 +196,29 @@ WHERE pc.ProductCode = @ProductCode
             return roots;
         }
 
-        private class PolicyRow
+        public async Task<bool> InsertDataLink(List<DataLinkModel> dataLinkModels)
         {
-            public int CategoryId { get; set; }
-            public string CategoryCode { get; set; }
-            public string ParentCategoryCode { get; set; }
-            [MultiLanguage]
-            public string CategoryName { get; set; }
-            public string en_CategoryName { get; set; }
-
-            public int PolicyId { get; set; }
-            public string PolicyCode { get; set; }
-            public int? PolicyVersion { get; set; }
-            [MultiLanguage]
-            public string Content { get; set; }
-            public string en_Content { get; set; }
-
-            public bool? IsRequired { get; set; }
+            string sql = @"
+            INSERT INTO CMP.dbo.FGCMP_DR_DataLink
+            (
+                ProductCode,
+                Email,
+                UserInfo,
+                EncryptData
+            )
+            VALUES
+            (
+                @ProductCode,
+                @Email,
+                @UserInfo,
+                @EncryptData
+            )";
+            var rs = await _CMPConn.ExecuteAsync(sql, dataLinkModels);
+            if (rs > 0)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }
