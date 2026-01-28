@@ -1,5 +1,7 @@
 using FiinGroup.CMP.PM.BLImplementations;
 using FiinGroup.CMP.PM.BLInterfaces;
+using FiinGroup.Packages.Common.MultiLanguage;
+using FiinX.Localizer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,8 +10,11 @@ builder.Services.AddControllersWithViews();
 var service = builder.Services;
 
 service.AddScoped<ICMPService, CMPService>();
-var app = builder.Build();
+service.AddMultiLanguageOptions();
+service.AddLocalizer();
 
+var app = builder.Build();
+app.UseLocalizer();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

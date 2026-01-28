@@ -26,7 +26,7 @@ namespace FiinGroup.CMP.Controllers
         }
         public async Task<IActionResult> GetPolicyContent(string productCode)
         {
-            List<PolicyCategoryModel> rs = await _cMPService.GetPolicyByProductCodeAsync(productCode);
+            List<PolicyCategoryModel> rs = await _cMPService.GetTreePolicyByProductCodeAsync(productCode);
 
             ViewData["ProductCode"] = productCode ?? string.Empty;
             return Json(rs);
@@ -54,9 +54,7 @@ namespace FiinGroup.CMP.Controllers
                 await _cMPService.GetPolicyByProductCodeAsync(request.ProductCode);
 
             var validPolicyCodes =
-                validPolicies
-                    .SelectMany(c => c.policyModels)
-                    .Select(p => p.PolicyCode)
+                validPolicies.Select(p => p.PolicyCode)
                     .ToHashSet();
 
             var acceptedConsents = request.Consents
@@ -95,7 +93,6 @@ namespace FiinGroup.CMP.Controllers
                 }),
                 Policies = acceptedConsents
             };
-
             // 6. Insert
             await _cMPService.InsertConsentSubmissionAsync(insertRequest);
 

@@ -19,7 +19,7 @@ namespace FiinGroup.CMP.PM.CommandQueries
 
             public override async Task<List<PolicyCategoryModel>> HandleAsync(GetCMPByProductRequest request, CancellationToken cancellationToken)
             {
-                var resultTask = await _cmpService.GetPolicyByProductCodeAsync(request.ProductCode, cancellationToken);
+                var resultTask = await _cmpService.GetTreePolicyByProductCodeAsync(request.ProductCode, cancellationToken);
 
                 return resultTask;
             }

@@ -2,6 +2,7 @@
 using FiinGroup.CMP.PM.BLInterfaces;
 using FiinGroup.CMP.PM.Models;
 using FiinGroup.CMP.PM.Models.ViewModels;
+using FiinGroup.Packages.Common.MultiLanguage;
 using StoxPlus.Infrastructure.DbConsumer;
 using System.Data;
 using System.Text.Json;
@@ -77,74 +78,137 @@ namespace FiinGroup.CMP.PM.BLImplementations
 
             return JsonSerializer.Deserialize<IpLocationResult>(json);
         }
-
-        public async Task<List<PolicyCategoryModel>> GetPolicyByProductCodeAsync(string productCode, CancellationToken cancellationToken = default)
+        public async Task<List<ConsentPolicyModel>> GetPolicyByProductCodeAsync(
+string productCode,
+CancellationToken cancellationToken = default)
         {
-            var result = new List<PolicyCategoryModel>();
+            const string policySql = @"
+SELECT pc.CategoryCode,
+       p.PolicyId,
+       p.PolicyCode,
+       p.PolicyVersion,
+       p.Content,
+       p.en_Content,
+       pc.IsRequired
+FROM FGCMP_DR_Policy_Category_Product pc
+INNER JOIN FGCMP_DM_Policy p ON pc.PolicyCode = p.PolicyCode
+WHERE pc.ProductCode = @ProductCode
+  AND pc.RecordStatus = 1
+  AND p.RecordStatus = 1;
+";
 
-            const string sql = @"
-            SELECT c.CategoryId, c.CategoryCode, c.CategoryName, c.en_CategoryName,
-                   p.PolicyId, p.PolicyCode, p.PolicyVersion, p.Content, p.en_Content,
-                   pc.IsRequired
-            FROM Policy_Category pc
-            INNER JOIN Consent_Category c ON pc.CategoryCode = c.CategoryCode
-            INNER JOIN Consent_Policy p ON pc.PolicyCode = p.PolicyCode
-            WHERE pc.ProductCode = @productCode AND pc.RecordStatus = 1 AND p.RecordStatus = 1 AND c.RecordStatus = 1
-            ORDER BY c.CategoryId, p.PolicyId
-            ";
-
-            var rows = (await _CMPConn.QueryAsync<PolicyRow>(sql, new { ProductCode = productCode }, CommandType.Text)).ToList();
-
-            var map = new Dictionary<int, PolicyCategoryModel>();
-
-            foreach (var r in rows)
+            var policies = (await _CMPConn.QueryAsync<ConsentPolicyModel>(
+                policySql, new { ProductCode = productCode })).ToList();
+            return policies;
+        }
+        public async Task<List<PolicyCategoryModel>> GetTreePolicyByProductCodeAsync(string productCode, CancellationToken cancellationToken = default)
+        {
+            if (productCode == null)
             {
-                if (!map.TryGetValue(r.CategoryId, out var pcModel))
+                return new List<PolicyCategoryModel>();
+            }
+            const string policySql = @"
+                            SELECT pc.CategoryCode,
+                                   p.PolicyId,
+                                   p.PolicyCode,
+                                   p.PolicyVersion,
+                                   p.Content,
+                                   p.en_Content,
+                                   pc.IsRequired
+                            FROM FGCMP_DR_Policy_Category_Product pc
+                            INNER JOIN FGCMP_DM_Policy p ON pc.PolicyCode = p.PolicyCode
+                            WHERE pc.ProductCode = @ProductCode
+                              AND pc.RecordStatus = 1
+                              AND p.RecordStatus = 1;
+                            ";
+            const string categorySql = @"
+                            SELECT CategoryId,
+                                   CategoryCode,
+                                   ParentCategoryCode,
+                                   CategoryName,
+                                   en_CategoryName
+                            FROM FGCMP_DM_Category
+                            WHERE RecordStatus = 1;
+                            ";
+            // 1️⃣ Load all categories
+            var categories = (await _CMPConn.QueryAsync<ConsentCategoryModel>(
+                categorySql)).ToList();
+
+            // 2️⃣ Load policies by product
+            var policies = (await _CMPConn.QueryAsync<PolicyRow>(
+                policySql, new { ProductCode = productCode })).ToList();
+            if (policies.Count == 0)
+            {
+                return new List<PolicyCategoryModel>();
+            }
+            // 3️⃣ Map CategoryCode -> PolicyCategoryModel
+            var categoryMap = categories.ToDictionary(
+                 c => c.CategoryCode,
+                 c => new PolicyCategoryModel
+                 {
+                     PolicyCategory = new ConsentCategoryModel
+                     {
+                         CategoryId = c.CategoryId,
+                         CategoryCode = c.CategoryCode,
+                         ParentCategoryCode = c.ParentCategoryCode,
+                         CategoryName = c.CategoryName,
+                         en_CategoryName = c.en_CategoryName,
+                         Children = new List<ConsentCategoryModel>() // ⭐ QUAN TRỌNG
+                     },
+                     PolicyModels = new List<ConsentPolicyViewModel>()
+                 });
+            // 4️⃣ Attach policy to category
+            foreach (var p in policies)
+            {
+                if (!categoryMap.TryGetValue(p.CategoryCode, out var categoryNode))
+                    continue;
+
+                categoryNode.PolicyModels.Add(new ConsentPolicyViewModel
                 {
-                    var category = new ConsentCategoryModel
-                    {
-                        CategoryId = r.CategoryId,
-                        CategoryCode = r.CategoryCode,
-                        CategoryName = r.CategoryName,
-                        EnCategoryName = r.en_CategoryName
-                    };
-
-                    pcModel = new PolicyCategoryModel
-                    {
-                        PolicyCategory = category,
-                        policyModels = new List<ConsentPolicyViewModel>()
-                    };
-
-                    map[r.CategoryId] = pcModel;
-                }
-
-                var policy = new ConsentPolicyViewModel
-                {
-                    PolicyId = r.PolicyId,
-                    PolicyCode = r.PolicyCode,
-                    PolicyVersion = r.PolicyVersion ?? 0,
-                    Content = r.Content,
-                    EnContent = r.en_Content,
-                    IsRequired = r.IsRequired ?? false
-                };
-
-                pcModel.policyModels!.Add(policy);
+                    PolicyId = p.PolicyId,
+                    PolicyCode = p.PolicyCode,
+                    PolicyVersion = p.PolicyVersion ?? 0,
+                    Content = p.Content,
+                    en_Content = p.en_Content,
+                    IsRequired = p.IsRequired ?? false
+                });
             }
 
-            result.AddRange(map.Values);
+            // 5️⃣ Build tree
+            var roots = new List<PolicyCategoryModel>();
 
-            return result;
+            foreach (var node in categoryMap.Values)
+            {
+                var parentCode = node.PolicyCategory.ParentCategoryCode;
+
+                if (!string.IsNullOrEmpty(parentCode)
+                    && categoryMap.TryGetValue(parentCode, out var parent))
+                {
+                    // ✅ add CẢ NODE
+                    parent.Children.Add(node);
+                }
+                else
+                {
+                    roots.Add(node);
+                }
+            }
+
+            return roots;
         }
+
         private class PolicyRow
         {
             public int CategoryId { get; set; }
             public string CategoryCode { get; set; }
+            public string ParentCategoryCode { get; set; }
+            [MultiLanguage]
             public string CategoryName { get; set; }
             public string en_CategoryName { get; set; }
 
             public int PolicyId { get; set; }
             public string PolicyCode { get; set; }
             public int? PolicyVersion { get; set; }
+            [MultiLanguage]
             public string Content { get; set; }
             public string en_Content { get; set; }
 

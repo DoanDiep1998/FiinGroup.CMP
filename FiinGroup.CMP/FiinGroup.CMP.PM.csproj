@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FiinX.Localizer\FiinX.Localizer.csproj" />
     <ProjectReference Include="..\StoxPlus.Infrastructure\StoxPlus.Infrastructure.csproj" />
   </ItemGroup>
 

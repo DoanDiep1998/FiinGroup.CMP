@@ -1,4 +1,5 @@
-﻿using FiinGroup.Packages.Common.MultiLanguage;
+﻿
+using FiinGroup.Packages.Common.MultiLanguage;
 
 namespace FiinGroup.CMP.PM.Models
 {
@@ -20,7 +21,7 @@ namespace FiinGroup.CMP.PM.Models
         public int PolicyVersion { get; set; }
         [MultiLanguage]
         public string Content { get; set; }
-        public string EnContent { get; set; }
+        public string en_Content { get; set; }
 
     }
 }

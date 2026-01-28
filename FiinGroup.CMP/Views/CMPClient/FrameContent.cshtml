@@ -1,4 +1,5 @@
 ﻿@using FiinGroup.CMP.PM.Models
+@using FiinX.Localizer
 @model List<PolicyCategoryModel>
 @{
     Layout = "~/Views/Shared/_CMPClientLayout.cshtml";
@@ -58,7 +59,7 @@
 
     <!-- Header -->
     <div class="consent-header">
-        <h3 class="consent-title">Tùy chỉnh Consent</h3>
+        <p>@("privacy_about".ToLocalizer())</p>
     </div>
 
     <!-- Body -->
@@ -141,6 +142,7 @@
                     accepted: el.checked
                 });
             });
+            debugger;
                 saveConsentToCMP(consents,event.data.payload);
     });
 
@@ -167,12 +169,20 @@
         });
     }
 
-    function renderPolicies(categories) {
-        const $container = $('#consentBody');
-        $container.empty();
+            function renderPolicies(categories) {
+            const $container = $('#consentBody');
+            $container.empty();
 
-        $.each(categories, function (_, category) {
-            const $category = $('<div>', { class: 'consent-category' });
+            $.each(categories, function (_, category) {
+                $container.append(renderCategory(category, 0));
+            });
+        }
+
+                 function renderCategory(category, level) {
+            const $category = $('<div>', {
+                class: 'consent-category',
+                css: { marginLeft: level * 24 + 'px' }
+            });
 
             $category.append(`
                 <h5 class="category-title">
@@ -180,31 +190,35 @@
                 </h5>
             `);
 
-            $.each(category.policyModels, function (_, policy) {
+            // ✅ policy luôn có
+            $.each(category.policyModels || [], function (_, policy) {
                 const checked = policy.isRequired ? 'checked' : '';
                 const disabled = policy.isRequired ? 'disabled' : '';
 
-                $category.append(`
-                    <div class="consent-row">
-                        <div class="consent-text">
-                            ${policy.content}
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input consent-item"
-                                   type="checkbox"
-                                   data-policy="${policy.policyCode}"
-                                   data-version="${policy.version}"
-                                   ${checked}
-                                   ${disabled} />
-                        </div>
-                    </div>
-                `);
+                    $category.append(`
+            <div class="consent-row">
+                <div class="consent-text">
+                    ${policy.content}
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input consent-item"
+                           type="checkbox"
+                           data-policy="${policy.policyCode}"
+                           data-version="${policy.policyVersion}"
+                           ${checked}
+                           ${disabled} />
+                </div>
+            </div>
+        `);
             });
 
-            $container.append($category);
-        });
-    }
+            // ✅ render children
+            $.each(category.children || [], function (_, childNode) {
+                $category.append(renderCategory(childNode, level + 1));
+            });
 
+            return $category;
+        }
     function saveConsentToCMP(consents,userInfo) {
         debugger;
         const productCode = '@ViewData["ProductCode"]';

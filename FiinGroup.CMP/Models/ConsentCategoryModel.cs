@@ -6,9 +6,11 @@ namespace FiinGroup.CMP.PM.Models
     {
         public int CategoryId { get; set; }
         public string CategoryCode { get; set; }
+        public string ParentCategoryCode { get; set; }
         [MultiLanguage]
         public string CategoryName { get; set; }
-        public string EnCategoryName { get; set; }
+        public string en_CategoryName { get; set; }
+        public List<ConsentCategoryModel> Children { get; set; } = new();
 
     }
 }
